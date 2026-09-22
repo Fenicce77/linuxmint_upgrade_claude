@@ -1,0 +1,499 @@
+<title>Virginia → Zena: a Mint upgrade plan</title>
+<style>
+  @media (prefers-color-scheme: dark) {}
+
+  :root {
+    --paper: #EEF1EC;
+    --paper-raised: #FFFFFF;
+    --ink: #1A211D;
+    --ink-soft: #4A544D;
+    --ink-faint: #7C877F;
+    --rule: #CBD3C8;
+    --accent: #1F6F5C;
+    --accent-ink: #0F4A3C;
+    --accent-soft: #DCEAE3;
+    --warn: #8A5314;
+    --warn-soft: #F5E6D3;
+    --warn-rule: #D9B076;
+    --danger: #8C3232;
+    --danger-soft: #F5DEDE;
+    --danger-rule: #D99B9B;
+    --code-bg: #14201C;
+    --code-text: #D9E6DD;
+    --code-comment: #7FA491;
+    --code-flag: #E0B98A;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    --sans: -apple-system, "Segoe UI", Roboto, Ubuntu, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "Liberation Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #101513;
+      --paper-raised: #161C19;
+      --ink: #E7ECE7;
+      --ink-soft: #AEBBB2;
+      --ink-faint: #7B8880;
+      --rule: #2A332E;
+      --accent: #6FBFA8;
+      --accent-ink: #9AD6C3;
+      --accent-soft: #1B2E28;
+      --warn: #E0A853;
+      --warn-soft: #2E2417;
+      --warn-rule: #513C1F;
+      --danger: #E08080;
+      --danger-soft: #331E1E;
+      --danger-rule: #5A2E2E;
+      --code-bg: #0B0F0D;
+      --code-text: #CFE3D6;
+      --code-comment: #5F8672;
+      --code-flag: #D9B078;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #101513;
+    --paper-raised: #161C19;
+    --ink: #E7ECE7;
+    --ink-soft: #AEBBB2;
+    --ink-faint: #7B8880;
+    --rule: #2A332E;
+    --accent: #6FBFA8;
+    --accent-ink: #9AD6C3;
+    --accent-soft: #1B2E28;
+    --warn: #E0A853;
+    --warn-soft: #2E2417;
+    --warn-rule: #513C1F;
+    --danger: #E08080;
+    --danger-soft: #331E1E;
+    --danger-rule: #5A2E2E;
+    --code-bg: #0B0F0D;
+    --code-text: #CFE3D6;
+    --code-comment: #5F8672;
+    --code-flag: #D9B078;
+  }
+  :root[data-theme="light"] {
+    --paper: #EEF1EC;
+    --paper-raised: #FFFFFF;
+    --ink: #1A211D;
+    --ink-soft: #4A544D;
+    --ink-faint: #7C877F;
+    --rule: #CBD3C8;
+    --accent: #1F6F5C;
+    --accent-ink: #0F4A3C;
+    --accent-soft: #DCEAE3;
+    --warn: #8A5314;
+    --warn-soft: #F5E6D3;
+    --warn-rule: #D9B076;
+    --danger: #8C3232;
+    --danger-soft: #F5DEDE;
+    --danger-rule: #D99B9B;
+    --code-bg: #14201C;
+    --code-text: #D9E6DD;
+    --code-comment: #7FA491;
+    --code-flag: #E0B98A;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-ink); }
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 6rem;
+  }
+
+  header.masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 2.5rem;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(2rem, 5vw, 2.7rem);
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  .dek {
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  /* snapshot tiles */
+  .snapshot {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-bottom: 3rem;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .tile {
+    background: var(--paper-raised);
+    padding: 0.9rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .tile .label {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .tile .value {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 1.05rem;
+    color: var(--ink);
+  }
+  .tile .value.accent { color: var(--accent-ink); font-weight: 600; }
+
+  /* layout: spine + content */
+  .layout {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.spine { display: none; }
+  }
+  nav.spine {
+    position: sticky;
+    top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding-top: 0.3rem;
+  }
+  nav.spine a {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    text-decoration: none;
+    display: flex;
+    gap: 0.5rem;
+  }
+  nav.spine a:hover { color: var(--accent-ink); }
+  nav.spine .n { color: var(--ink-faint); }
+
+  main { min-width: 0; }
+
+  section.phase {
+    margin-bottom: 3.2rem;
+    scroll-margin-top: 1.5rem;
+  }
+  .phase-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+    margin-bottom: 0.3rem;
+  }
+  .phase-num {
+    font-family: var(--mono);
+    color: var(--accent-ink);
+    font-size: 0.95rem;
+  }
+  h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.5rem;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .why {
+    color: var(--ink-soft);
+    max-width: 68ch;
+    margin: 0.4rem 0 1.1rem;
+  }
+
+  step {
+    display: block;
+    margin: 1.1rem 0;
+  }
+  .step-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.35rem;
+  }
+
+  pre.cmd {
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-family: var(--mono);
+    font-size: 0.84rem;
+    padding: 0.9rem 1.1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0.4rem 0 0.7rem;
+    line-height: 1.55;
+  }
+  pre.cmd .c { color: var(--code-comment); }
+  pre.cmd .flag { color: var(--code-flag); }
+
+  .callout {
+    border-left: 3px solid var(--warn-rule);
+    background: var(--warn-soft);
+    color: var(--ink);
+    padding: 0.7rem 1rem;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.92rem;
+    margin: 0.6rem 0;
+  }
+  .callout .tag {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--warn);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  .callout.danger {
+    border-left-color: var(--danger-rule);
+    background: var(--danger-soft);
+  }
+  .callout.danger .tag { color: var(--danger); }
+
+  table.repos {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+    margin: 0.6rem 0 0.3rem;
+  }
+  .repos-wrap { overflow-x: auto; }
+  table.repos th, table.repos td {
+    text-align: left;
+    padding: 0.5rem 0.7rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  table.repos th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+  table.repos td.repo { font-family: var(--mono); font-size: 0.82rem; color: var(--ink); white-space: nowrap; }
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    padding: 0.12rem 0.5rem;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+  }
+  .pill.ok { background: var(--accent-soft); color: var(--accent-ink); }
+  .pill.check { background: var(--warn-soft); color: var(--warn); }
+  .pill.risk { background: var(--danger-soft); color: var(--danger); }
+
+  footer {
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-faint);
+    font-size: 0.82rem;
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <span class="eyebrow">Upgrade plan · piticli3-HP-Pavilion-Laptop-15-cs0xxx</span>
+    <h1>Virginia (21.3) → Zena (22.3)</h1>
+    <p class="dek">Your machine is two major bases behind. Linux Mint 23 isn't due until December 2026, so 22.3 "Zena" — on Ubuntu 24.04 LTS, supported into 2029 — is the correct landing spot, not a stopgap.</p>
+  </header>
+
+  <div class="snapshot">
+    <div class="tile"><span class="label">Current</span><span class="value">Mint 21.3 Virginia</span></div>
+    <div class="tile"><span class="label">Target</span><span class="value accent">Mint 22.3 Zena</span></div>
+    <div class="tile"><span class="label">Base jump</span><span class="value">jammy → noble</span></div>
+    <div class="tile"><span class="label">Kernel</span><span class="value">5.15.0-151</span></div>
+    <div class="tile"><span class="label">Packages</span><span class="value">3,056 installed</span></div>
+    <div class="tile"><span class="label">Pending in 21.3</span><span class="value">470 upgradable</span></div>
+    <div class="tile"><span class="label">Disk free</span><span class="value">201G / 468G</span></div>
+    <div class="tile"><span class="label">Held packages</span><span class="value">none</span></div>
+  </div>
+
+  <div class="layout">
+    <nav class="spine">
+      <a href="#p0"><span class="n">0</span> Before you touch anything</a>
+      <a href="#p1"><span class="n">1</span> Flatten 21.3 first</a>
+      <a href="#p2"><span class="n">2</span> Snapshot &amp; back up</a>
+      <a href="#p3"><span class="n">3</span> Quarantine third-party repos</a>
+      <a href="#p4"><span class="n">4</span> Run mintupgrade</a>
+      <a href="#p5"><span class="n">5</span> Land on 22, reboot, check /etc</a>
+      <a href="#p6"><span class="n">6</span> Re-point repos at noble</a>
+      <a href="#p7"><span class="n">7</span> Ride to 22.3</a>
+      <a href="#p8"><span class="n">8</span> Verify &amp; rollback</a>
+    </nav>
+
+    <main>
+
+      <section class="phase" id="p0">
+        <div class="phase-head"><span class="phase-num">00</span><h2>Before you touch anything</h2></div>
+        <p class="why">Your session shows <strong>8 logged-in users</strong> and 51 days of uptime — that's almost certainly stacked SSH/tmux/terminal sessions on one workstation, not 8 people. A mid-upgrade reboot kills all of them.</p>
+        <step>
+          <div class="step-title">Check what else is running before you commit to a reboot window</div>
+          <pre class="cmd"><span class="c"># who's attached, and what's alive in tmux/screen</span>
+who
+tmux ls 2>/dev/null
+screen -ls 2>/dev/null
+<span class="c"># anything with uncommitted work — check running dev daemons</span>
+systemctl status docker mongod 2>/dev/null</pre>
+        </step>
+        <div class="callout">
+          <span class="tag">Time budget</span>
+          This is not a 20-minute job. Between the jammy→noble jump and re-pointing ~15 third-party repos, block out a few uninterrupted hours and don't start it before something time-sensitive.
+        </div>
+      </section>
+
+      <section class="phase" id="p1">
+        <div class="phase-head"><span class="phase-num">01</span><h2>Flatten 21.3 first</h2></div>
+        <p class="why">You have 470 packages pending inside 21.3 itself. Never start a major version jump on top of a partially-updated system — resolve everything on the <em>current</em> base first, so <code>mintupgrade</code> is diffing against a known-good state.</p>
+        <step>
+          <pre class="cmd">sudo apt update
+sudo apt full-upgrade <span class="flag">-y</span>
+sudo apt autoremove <span class="flag">-y</span>
+sudo reboot</pre>
+        </step>
+        <p class="why">After reboot, confirm you're clean:</p>
+        <pre class="cmd">apt list --upgradable 2>/dev/null | wc -l   <span class="c"># expect: 0 (or just the list header)</span></pre>
+      </section>
+
+      <section class="phase" id="p2">
+        <div class="phase-head"><span class="phase-num">02</span><h2>Snapshot and back up</h2></div>
+        <p class="why">The upgrade tool overwrites files under <code>/etc</code> with new defaults. A Timeshift snapshot is your undo button for both a broken boot and for hand-diffing config afterward — 201G free on <code>/</code> is plenty of room.</p>
+        <step>
+          <pre class="cmd"><span class="c"># if Timeshift isn't already set up</span>
+sudo apt install timeshift <span class="flag">-y</span>
+sudo timeshift --create --comments <span class="flag">"pre-mint22-upgrade"</span> --tags D</pre>
+        </step>
+        <div class="callout danger">
+          <span class="tag">Also back up separately</span>
+          Timeshift snapshots by default exclude <code>/home</code>. If you keep dev work, SSH keys, or DB dumps under your home directory, back those up independently (external drive, rsync, or cloud) — don't rely on the snapshot alone for anything you can't afford to lose.
+        </div>
+      </section>
+
+      <section class="phase" id="p3">
+        <div class="phase-head"><span class="phase-num">03</span><h2>Quarantine third-party repos</h2></div>
+        <p class="why">Your <code>sources.list.d</code> has 15 third-party entries. <code>mintupgrade</code> only understands Mint/Ubuntu sources — a stray jammy-pinned repo in the mix during the run can cause dependency resolution to fail or silently pull the wrong packages. Move them out of the way, run the upgrade against a clean base, then bring them back deliberately in Phase 6.</p>
+        <step>
+          <pre class="cmd">sudo mkdir -p /etc/apt/sources.list.d.disabled
+sudo mv /etc/apt/sources.list.d/{antigravity,bazel,docker,mongodb-org-8.0,mwt-desktop,nodesource,percona-pbm-release,percona-psmdb-80-release,percona-telemetry-release,percona-tools-release,repo.fortinet.com,sublime-text}.list /etc/apt/sources.list.d.disabled/ 2>/dev/null
+sudo mv /etc/apt/sources.list.d/{brave-browser-release,google-chrome,vscode}.sources /etc/apt/sources.list.d.disabled/ 2>/dev/null
+<span class="c"># leave official-package-repositories.list — mintupgrade rewrites it itself</span>
+sudo apt update</pre>
+        </step>
+      </section>
+
+      <section class="phase" id="p4">
+        <div class="phase-head"><span class="phase-num">04</span><h2>Run mintupgrade</h2></div>
+        <p class="why">This is the official, supported tool for a major-version jump (21.3 → 22) — it is not the same mechanism as a point-release update, and plain <code>apt dist-upgrade</code> will not take you across the base change.</p>
+        <step>
+          <pre class="cmd">sudo apt install mintupgrade
+sudo mintupgrade check    <span class="c"># dry run — read every warning it prints</span>
+sudo mintupgrade download
+sudo mintupgrade upgrade</pre>
+        </step>
+        <div class="callout">
+          <span class="tag">Known cosmetic bug</span>
+          Partway through, font rendering will break and text becomes unreadable in the terminal. This is expected and cosmetic — the tool is still working. Do not Ctrl-C, do not close the terminal, do not reboot until it reports completion.
+        </div>
+      </section>
+
+      <section class="phase" id="p5">
+        <div class="phase-head"><span class="phase-num">05</span><h2>Land on 22, reboot, check /etc</h2></div>
+        <step>
+          <pre class="cmd">sudo apt remove mintupgrade
+sudo reboot</pre>
+        </step>
+        <p class="why">After reboot, confirm the base actually moved before doing anything else:</p>
+        <pre class="cmd">cat /etc/linuxmint/info   <span class="c"># expect RELEASE=22, CODENAME=wilma (or later point release)</span>
+lsb_release -a</pre>
+        <p class="why">Then diff your pre-upgrade snapshot against live <code>/etc</code> for anything the upgrade silently overwrote that you care about (custom fstab entries, SSH config, cron, sysctl tuning) — restore individual files from Timeshift as needed, don't restore the whole snapshot at this point.</p>
+      </section>
+
+      <section class="phase" id="p6">
+        <div class="phase-head"><span class="phase-num">06</span><h2>Re-point repos at noble</h2></div>
+        <p class="why">Not every quarantined repo needs editing — several are already distro-agnostic. Handle them by category rather than blindly re-enabling all 15:</p>
+        <div class="repos-wrap">
+        <table class="repos">
+          <tr><th>Repo</th><th>Status</th><th>Action</th></tr>
+          <tr><td class="repo">sublime-text, nodesource, mwt-desktop, bazel, antigravity</td><td><span class="pill ok">no change</span></td><td>Distro-agnostic suite names — move the <code>.list</code> file straight back, no edits.</td></tr>
+          <tr><td class="repo">google-chrome, brave-browser, vscode <span style="color:var(--ink-faint)">(.sources)</span></td><td><span class="pill ok">no change</span></td><td>Modern deb822 format, not codename-pinned — move back as-is.</td></tr>
+          <tr><td class="repo">docker.list</td><td><span class="pill check">edit</span></td><td>Docker supports noble. Change <code>jammy stable</code> → <code>noble stable</code>, then <code>apt update</code>.</td></tr>
+          <tr><td class="repo">mongodb-org-8.0.list</td><td><span class="pill check">verify first</span></td><td>Check MongoDB's official Ubuntu 24.04 support for the 8.0 series before editing <code>jammy</code> → <code>noble</code> — their noble repo sometimes lags.</td></tr>
+          <tr><td class="repo">percona-*.list (4 files)</td><td><span class="pill check">re-run tool</span></td><td>Don't hand-edit — reinstall <code>percona-release</code> and re-run <code>percona-release enable ...</code> for each component so it regenerates correct noble entries.</td></tr>
+          <tr><td class="repo">repo.fortinet.com.list</td><td><span class="pill risk">check vendor</span></td><td>URL is hardcoded to <code>ubuntu22</code>, not just a codename swap. Confirm Fortinet publishes a <code>ubuntu24</code> path for FortiClient before re-enabling — VPN client may need a manual reinstall.</td></tr>
+        </table>
+        </div>
+        <step>
+          <div class="step-title">Move back everything in the "no change" and "edit" rows</div>
+          <pre class="cmd">sudo mv /etc/apt/sources.list.d.disabled/*.list /etc/apt/sources.list.d/
+sudo mv /etc/apt/sources.list.d.disabled/*.sources /etc/apt/sources.list.d/
+<span class="c"># then edit docker.list (and mongodb-org-8.0.list, if verified) jammy → noble</span>
+sudo apt update</pre>
+        </step>
+      </section>
+
+      <section class="phase" id="p7">
+        <div class="phase-head"><span class="phase-num">07</span><h2>Ride to 22.3</h2></div>
+        <p class="why">22 → 22.1 → 22.2 → 22.3 are point releases on the <em>same</em> Ubuntu base, but Mint deliberately doesn't let plain <code>apt</code> drive this jump — the package-source metadata differs per point release and the guidance is explicit not to hand-edit it. Use the GUI Update Manager.</p>
+        <step>
+          <div class="step-title">In Update Manager</div>
+          <p class="why" style="margin-top:-0.3rem">Refresh, then <strong>Edit → Upgrade to Linux Mint 22.x</strong>. It may only offer one point release at a time — run it, reboot, reopen Update Manager, repeat until it reports 22.3 Zena.</p>
+        </step>
+      </section>
+
+      <section class="phase" id="p8">
+        <div class="phase-head"><span class="phase-num">08</span><h2>Verify, then confirm your rollback path is real</h2></div>
+        <step>
+          <pre class="cmd">cat /etc/linuxmint/info   <span class="c"># RELEASE=22.3, CODENAME=zena</span>
+uname -r                  <span class="c"># newer kernel, noble HWE stack</span>
+docker run hello-world
+systemctl status mongod
+git --version && node --version && code --version</pre>
+        </step>
+        <div class="callout danger">
+          <span class="tag">If boot fails</span>
+          Boot the Linux Mint 22 live ISO → use its Boot Repair tool. If that doesn't resolve it, boot the live ISO, launch Timeshift, and restore the <code>pre-mint22-upgrade</code> snapshot from Phase 2.
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    Built from a live read of this machine on 2026-09-22 — package counts, disk, and repo list will drift the moment you run <code>apt update</code>, so treat the snapshot tiles as a starting point, not a fixed spec.
+  </footer>
+
+</div>
