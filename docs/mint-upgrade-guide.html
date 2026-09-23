@@ -337,6 +337,7 @@
     <div class="tile"><span class="label">Target</span><span class="value accent">Mint 22.3 Zena</span></div>
     <div class="tile"><span class="label">Base jump</span><span class="value">jammy → noble</span></div>
     <div class="tile"><span class="label">Kernel</span><span class="value">5.15.0-151</span></div>
+    <div class="tile"><span class="label">GPU</span><span class="value">NVIDIA MX150, prime=nvidia</span></div>
     <div class="tile"><span class="label">Packages</span><span class="value">3,056 installed</span></div>
     <div class="tile"><span class="label">Pending in 21.3</span><span class="value">470 upgradable</span></div>
     <div class="tile"><span class="label">Disk free</span><span class="value">201G / 468G</span></div>
@@ -354,6 +355,7 @@
       <a href="#p6"><span class="n">6</span> Re-point repos at noble</a>
       <a href="#p7"><span class="n">7</span> Ride to 22.3</a>
       <a href="#p8"><span class="n">8</span> Verify &amp; rollback</a>
+      <a href="#p9"><span class="n">9</span> GPU &amp; bootloader risk audit</a>
     </nav>
 
     <main>
@@ -486,6 +488,59 @@ git --version && node --version && code --version</pre>
         <div class="callout danger">
           <span class="tag">If boot fails</span>
           Boot the Linux Mint 22 live ISO → use its Boot Repair tool. If that doesn't resolve it, boot the live ISO, launch Timeshift, and restore the <code>pre-mint22-upgrade</code> snapshot from Phase 2.
+        </div>
+      </section>
+
+      <section class="phase" id="p9">
+        <div class="phase-head"><span class="phase-num">09</span><h2>GPU &amp; bootloader risk audit</h2></div>
+        <p class="why">Added after a deeper diagnostic pass on 2026-09-23. This machine isn't a plain desktop — it's a CUDA dev box running <code>nvidia-driver-535</code> via DKMS with <code>prime-select</code> pinned to <strong>nvidia</strong> (pure discrete-GPU mode, no Intel fallback wired up). That combination concentrates most of the real risk in this upgrade.</p>
+
+        <step>
+          <div class="step-title">Critical — NVIDIA DKMS rebuild with no iGPU fallback</div>
+          <p class="why" style="margin-top:-0.2rem">The jammy→noble jump replaces the 5.15 kernel with a 6.8-series kernel. DKMS must rebuild the nvidia module against the new headers during the upgrade. Because Xorg is configured for nvidia-only (not Intel/NVIDIA offload), a failed rebuild means a black screen on first boot with nothing to fall back to — this laptop's Intel UHD 620 is present in hardware but not wired into the current X config.</p>
+          <pre class="cmd"><span class="c"># after `mintupgrade upgrade` finishes, before rebooting — confirm the module actually built</span>
+dkms status   <span class="c"># expect: nvidia/535.288.01, &lt;new-kernel&gt;: installed</span>
+<span class="c"># if it says installed-weak or is missing the new kernel line, fix it before rebooting:</span>
+sudo dkms install nvidia/535.288.01 -k <span class="flag">$(ls /lib/modules | grep -v 5.15 | head -1)</span></pre>
+          <div class="callout danger">
+            <span class="tag">Escape hatch if you already rebooted to a black screen</span>
+            <code>Ctrl+Alt+F3</code> for a TTY → log in → <code>sudo prime-select intel &amp;&amp; sudo systemctl restart lightdm</code>. That gets you a working Intel-only desktop so you can fix NVIDIA/DKMS from a GUI terminal instead of blind on a TTY.
+          </div>
+        </step>
+
+        <step>
+          <div class="step-title">Critical — grub-pc and grub-efi are both installed</div>
+          <p class="why" style="margin-top:-0.2rem">This is an EFI/GPT system (boots via <code>shimx64.efi</code>) but <code>grub-pc</code> — the BIOS bootloader — is also installed, a leftover from the Mint installer covering both cases. Its postinst script can throw an interactive debconf prompt ("install GRUB to which drive?") mid-upgrade. If that fires during an unattended <code>mintupgrade</code> run, the terminal will look hung while it waits for input.</p>
+          <div class="callout">
+            <span class="tag">Mitigation</span>
+            Stay at the terminal for the <code>mintupgrade upgrade</code> step — don't walk away. If the grub-pc prompt appears, decline installing to any BIOS device (you don't need it). Optionally purge it ahead of time, since this system never boots via BIOS: <code>sudo apt purge grub-pc grub-pc-bin</code>.
+          </div>
+        </step>
+
+        <step>
+          <div class="step-title">Moderate — CUDA toolkit will jump versions</div>
+          <p class="why" style="margin-top:-0.2rem"><code>nvidia-cuda-toolkit</code> on jammy is CUDA 11.5, plus the full Nsight Compute/Systems suite. Noble's repos ship a newer default CUDA branch. The upgrade won't fail because of this, but any environment, container, or script pinned to the CUDA 11.5 ABI will silently start pointing at a different toolkit version. Check before upgrading, not after:</p>
+          <pre class="cmd">pip list 2>/dev/null | grep -i cuda
+grep -ril <span class="flag">"cuda:11"</span> ~/Dockerfile* ~/**/Dockerfile 2>/dev/null
+conda env list 2>/dev/null</pre>
+        </step>
+
+        <step>
+          <div class="step-title">Moderate — systemd-oomd is new in Noble, not installed today</div>
+          <p class="why" style="margin-top:-0.2rem">Ubuntu 24.04 enables <code>systemd-oomd</code> by default, which proactively kills processes under memory pressure. You run Docker, MongoDB, and Percona daemons on a 15G-RAM box that already runs close to its ceiling day to day — after the upgrade, check whether it's being trigger-happy with your dev services.</p>
+          <pre class="cmd">systemctl status systemd-oomd
+systemd-cgtop   <span class="c"># watch memory pressure on docker.service / mongod.service under load</span></pre>
+        </step>
+
+        <step>
+          <div class="step-title">Low — stale package remnants</div>
+          <p class="why" style="margin-top:-0.2rem">20 packages sit in <code>rc</code> state (removed, config retained), including three old kernel image/module sets and an orphaned <code>linux-objects-nvidia-535-5.15.0-171-generic</code> for a kernel that was never actually installed. Harmless, but purging it first keeps <code>mintupgrade check</code>'s output readable so a real warning doesn't get lost in the noise.</p>
+          <pre class="cmd">sudo apt purge $(dpkg -l | awk <span class="flag">'/^rc/{print $2}'</span>)</pre>
+        </step>
+
+        <div class="callout">
+          <span class="tag">Not verified in this audit</span>
+          <code>apt-get check</code> and <code>dpkg --audit</code> both need an interactive sudo password, which wasn't available in the session this was generated from. Run both yourself as a final pre-upgrade gate — a clean result on each confirms there are no broken dependencies before you start Phase 1.
         </div>
       </section>
 

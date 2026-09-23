@@ -10,6 +10,13 @@ VS Code, etc.), running `mintupgrade` to land on Mint 22, re-pointing each
 repo at the `noble` base, riding point releases to 22.3 via Update Manager,
 and post-upgrade verification with a Timeshift rollback path.
 
+**2026-09-23 addendum:** a GPU/bootloader/image-consistency risk audit,
+added after diagnosing this machine's actual setup — NVIDIA DKMS with
+`prime-select` pinned to nvidia-only (no Intel fallback), a leftover
+`grub-pc` install alongside grub-efi, a pending CUDA 11.5 → noble-default
+toolkit version jump, and Ubuntu 24.04's new `systemd-oomd` behavior
+against this box's Docker/MongoDB/Percona services.
+
 ## Contents
 
 - [`docs/mint-upgrade-guide.html`](docs/mint-upgrade-guide.html) — the full
